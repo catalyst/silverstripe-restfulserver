@@ -8,10 +8,10 @@ use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\SS_List;
 use SilverStripe\ORM\ValidationException;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Member;
@@ -25,33 +25,24 @@ use SilverStripe\Security\Security;
  */
 class RestfulServer extends Controller
 {
-    /**
-     * @config
-     * @var array
-     */
     private static $url_handlers = array(
         '$ClassName!/$ID/$Relation' => 'handleAction',
         '' => 'notFound'
     );
 
     /**
-     * @config
-     * @var string root of the api route, MUST have a trailing slash
+     * root of the api route, MUST have a trailing slash
      */
     private static $api_base = "api/v1/";
 
     /**
-     * @config
-     * @var string Class name for an authenticator to use on API access
+     * Class name for an authenticator to use on API access
      */
     private static $authenticator = BasicRestfulAuthenticator::class;
 
     /**
      * If no extension is given in the request, resolve to this extension
      * (and subsequently the {@link RestfulServer::$default_mimetype}.
-     *
-     * @config
-     * @var string
      */
     private static $default_extension = "xml";
 
@@ -62,8 +53,6 @@ class RestfulServer extends Controller
      * The fully namespaced classnames can also still be used though
      * Example:
      * ['mydataobject' => MyDataObject::class]
-     *
-     * @config array
      */
     private static $endpoint_aliases = [];
 
@@ -74,23 +63,14 @@ class RestfulServer extends Controller
      * Note: With this enabled (the default), no POST request for resource creation
      * will return an HTTP 201. Because of the addition of the "Location" header,
      * all responses become a straight HTTP 200.
-     *
-     * @config
-     * @var boolean
      */
     private static $location_header_on_create = true;
 
     /**
      * If no extension is given, resolve the request to this mimetype.
-     *
-     * @var string
      */
     protected static $default_mimetype = "text/xml";
 
-    /**
-     * @uses authenticate()
-     * @var Member
-     */
     protected $member;
 
     private static $allowed_actions = array(
@@ -114,9 +94,6 @@ class RestfulServer extends Controller
      * kills both requests (i.e. URIs) and XML (invalid character in a tag name)
      * So we'll replace them with a hyphen (-), as it's also unambiguious
      * in both cases (invalid in a php class name, and safe in an xml tag name)
-     *
-     * @param string $classname
-     * @return string 'escaped' class name
      */
     protected function sanitiseClassName($className)
     {
@@ -126,9 +103,6 @@ class RestfulServer extends Controller
     /**
      * Convert hyphen escaped class names back into fully qualified
      * PHP safe variant.
-     *
-     * @param string $classname
-     * @return string syntactically valid classname
      */
     protected function unsanitiseClassName($className)
     {
@@ -137,14 +111,12 @@ class RestfulServer extends Controller
 
     /**
      * Parse many many relation class (works with through array syntax)
-     *
-     * @param string|array $class
-     * @return string|array
      */
     public static function parseRelationClass($class)
     {
         // detect many many through syntax
-        if (is_array($class)
+        if (
+            is_array($class)
             && array_key_exists('through', $class ?? [])
             && array_key_exists('to', $class ?? [])
         ) {
@@ -178,7 +150,8 @@ class RestfulServer extends Controller
         if ($id && !is_numeric($id)) {
             return $this->notFound();
         }
-        if ($relation
+        if (
+            $relation
             && !preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $relation ?? '')
         ) {
             return $this->notFound();
@@ -244,9 +217,6 @@ class RestfulServer extends Controller
      *   - static $api_access must be set. This enables the API on a class by class basis
      *   - $obj->canView() must return true. This lets you implement record-level security
      *
-     * @param string $className
-     * @param int $id
-     * @param string $relation
      * @return string The serialized representation of the requested object(s) - usually XML or JSON.
      */
     protected function getHandler($className, $id, $relationName)
@@ -327,7 +297,7 @@ class RestfulServer extends Controller
 
         if (!$obj) {
             $responseFormatter->setTotalSize(0);
-            return $responseFormatter->convertDataObjectSet(new ArrayList(), $fields);
+            return $responseFormatter->convertDataObjectSet(ArrayList::create([]), $fields);
         }
 
         $this->extend('updateRestfulGetHandler', $obj, $responseFormatter);
@@ -340,10 +310,6 @@ class RestfulServer extends Controller
      * {@link DataObject::getDefaultSearchContext()} to augument
      * an existing query object (mostly a component query from {@link DataObject})
      * with search clauses.
-     *
-     * @param string $className
-     * @param array $params
-     * @return SS_List
      */
     protected function getSearchQuery(
         $className,
@@ -558,8 +524,10 @@ class RestfulServer extends Controller
                 return $this->notFound();
             }
 
-            if (!Config::inst()->get($className, 'allowed_actions') ||
-                !in_array($relation, Config::inst()->get($className, 'allowed_actions') ?? [])) {
+            if (
+                !Config::inst()->get($className, 'allowed_actions') ||
+                !in_array($relation, Config::inst()->get($className, 'allowed_actions') ?? [])
+            ) {
                 return $this->permissionFailure();
             }
 

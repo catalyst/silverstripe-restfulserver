@@ -3,12 +3,11 @@
 namespace SilverStripe\RestfulServer\DataFormatter;
 
 use SilverStripe\RestfulServer\RestfulServer;
-use SilverStripe\View\ArrayData;
-use SilverStripe\Core\Convert;
 use SilverStripe\RestfulServer\DataFormatter;
 use SilverStripe\ORM\DataObjectInterface;
 use SilverStripe\Control\Director;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\ArrayData;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\ORM\FieldType;
 
 /**
@@ -16,39 +15,20 @@ use SilverStripe\ORM\FieldType;
  */
 class JSONDataFormatter extends DataFormatter
 {
-    /**
-     * @config
-     */
-    private static $api_base = "api/v1/";
+    private static $api_base = 'api/v1/';
 
     protected $outputContentType = 'application/json';
 
-    /**
-     * @return array
-     */
     public function supportedExtensions()
     {
-        return array(
-            'json',
-            'js'
-        );
+        return ['json', 'js'];
     }
 
-    /**
-     * @return array
-     */
     public function supportedMimeTypes()
     {
-        return array(
-            'application/json',
-            'text/x-json'
-        );
+        return ['application/json', 'text/x-json'];
     }
 
-    /**
-     * @param $array
-     * @return string
-     */
     public function convertArray($array)
     {
         return json_encode($array);
@@ -56,11 +36,6 @@ class JSONDataFormatter extends DataFormatter
 
     /**
      * Generate a JSON representation of the given {@link DataObject}.
-     *
-     * @param DataObject $obj   The object
-     * @param Array $fields     If supplied, only fields in the list will be returned
-     * @param $relations        Not used
-     * @return String JSON
      */
     public function convertDataObject(DataObjectInterface $obj, $fields = null, $relations = null)
     {
@@ -71,10 +46,6 @@ class JSONDataFormatter extends DataFormatter
      * Internal function to do the conversion of a single data object. It builds an empty object and dynamically
      * adds the properties it needs to it. If it's done as a nested array, json_encode or equivalent won't use
      * JSON object notation { ... }.
-     * @param DataObjectInterface $obj
-     * @param  $fields
-     * @param  $relations
-     * @return EmptyJSONObject
      */
     public function convertDataObjectToJSONObject(DataObjectInterface $obj, $fields = null, $relations = null)
     {
@@ -85,7 +56,7 @@ class JSONDataFormatter extends DataFormatter
 
         foreach ($this->getFieldsForObj($obj) as $fieldName => $fieldType) {
             // Field filtering
-            if ($fields && !in_array($fieldName, $fields ?? [])) {
+            if (!$fieldName || $fields && !in_array($fieldName, $fields ?? [])) {
                 continue;
             }
 
@@ -197,7 +168,7 @@ class JSONDataFormatter extends DataFormatter
         return json_decode($strData ?? '', true);
     }
 
-    public static function cast(FieldType\DBField $dbfield)
+    public static function cast(SS_List|FieldType\DBField $dbfield)
     {
         switch (true) {
             case $dbfield instanceof FieldType\DBInt:
@@ -206,6 +177,8 @@ class JSONDataFormatter extends DataFormatter
                 return (float)$dbfield->RAW();
             case $dbfield instanceof FieldType\DBBoolean:
                 return (bool)$dbfield->RAW();
+            case $dbfield instanceof SS_List:
+                return $dbfield->toArray();
             case is_null($dbfield->RAW()):
                 return null;
         }

@@ -5,54 +5,36 @@ namespace SilverStripe\RestfulServer\DataFormatter;
 use SimpleXMLElement;
 use SilverStripe\Control\Controller;
 use SilverStripe\Core\Convert;
-use SilverStripe\Dev\Debug;
 use SilverStripe\RestfulServer\DataFormatter;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataObjectInterface;
 use SilverStripe\Control\Director;
-use SilverStripe\ORM\SS_List;
 use SilverStripe\RestfulServer\RestfulServer;
 use InvalidArgumentException;
+use SilverStripe\Model\List\SS_List;
 
 /**
  * Formats a DataObject's member fields into an XML string
  */
 class XMLDataFormatter extends DataFormatter
 {
-
-    /**
-     * @config
-     */
     private static $api_base = "api/v1/";
 
     protected $outputContentType = 'text/xml';
 
-    /**
-     * @return array
-     */
     public function supportedExtensions()
     {
-        return array(
-            'xml'
-        );
+        return ['xml'];
     }
 
-    /**
-     * @return array
-     */
     public function supportedMimeTypes()
     {
-        return array(
+        return [
             'text/xml',
             'application/xml',
-        );
+        ];
     }
 
-    /**
-     * @param $array
-     * @return string
-     * @throws \Exception
-     */
     public function convertArray($array)
     {
         $response = Controller::curr()->getResponse();
@@ -64,11 +46,6 @@ class XMLDataFormatter extends DataFormatter
             <response>{$this->convertArrayWithoutHeader($array)}</response>";
     }
 
-    /**
-     * @param $array
-     * @return string
-     * @throws \Exception
-     */
     public function convertArrayWithoutHeader($array)
     {
         $xml = '';
@@ -92,10 +69,6 @@ class XMLDataFormatter extends DataFormatter
 
     /**
      * Generate an XML representation of the given {@link DataObject}.
-     *
-     * @param DataObject $obj
-     * @param $includeHeader Include <?xml ...?> header (Default: true)
-     * @return String XML
      */
     public function convertDataObject(DataObjectInterface $obj, $fields = null)
     {
@@ -107,12 +80,6 @@ class XMLDataFormatter extends DataFormatter
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" . $this->convertDataObjectWithoutHeader($obj, $fields);
     }
 
-    /**
-     * @param DataObject $obj
-     * @param null $fields
-     * @param null $relations
-     * @return string
-     */
     public function convertDataObjectWithoutHeader(DataObject $obj, $fields = null, $relations = null)
     {
         $className = $this->sanitiseClassName(get_class($obj));

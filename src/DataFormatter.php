@@ -5,9 +5,9 @@ namespace SilverStripe\RestfulServer;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataObjectInterface;
-use SilverStripe\ORM\SS_List;
 
 /**
  * A DataFormatter object handles transformation of data from SilverStripe model objects to a particular output
